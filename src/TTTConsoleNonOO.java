@@ -12,6 +12,13 @@ public class TTTConsoleNonOO {
     public static final int NOUGHT  = 1;
     public static final int NO_SEED = 2;
 
+    // Skor sementara untuk masing-masing pemain
+    public static int scoreX = 0;
+    public static int scoreO = 0;
+
+    // Jumlah total ronde yang dimainkan
+    public static int totalRounds = 0;
+
     // The game board
     public static final int ROWS = 3, COLS = 3;  // number of rows/columns
     public static int[][] board = new int[ROWS][COLS]; // EMPTY, CROSS, NOUGHT
@@ -31,28 +38,50 @@ public class TTTConsoleNonOO {
 
     /** The entry main method (the program starts here) */
     public static void main(String[] args) {
-        // Initialize the board, currentState and currentPlayer
-        initGame();
+        System.out.print("Berapa ronde yang ingin dimainkan? ");
+        totalRounds = in.nextInt();
 
-        // Play the game once
-        do {
-            // currentPlayer makes a move
-            // Update board[selectedRow][selectedCol] and currentState
-            stepGame();
-            // Refresh the display
-            paintBoard();
-            // Print message if game over
-            if (currentState == CROSS_WON) {
-                System.out.println("'X' won!\nBye!");
-            } else if (currentState == NOUGHT_WON) {
-                System.out.println("'O' won!\nBye!");
-            } else if (currentState == DRAW) {
-                System.out.println("It's a Draw!\nBye!");
-            }
-            // Switch currentPlayer
-            currentPlayer = (currentPlayer == CROSS) ? NOUGHT : CROSS;
-        } while (currentState == PLAYING); // repeat if not game over
+        for (int round = 1; round <= totalRounds; round++) {
+            System.out.println("\n=== Ronde " + round + " ===");
+            initGame();
+
+            do {
+                stepGame();
+                paintBoard();
+
+                if (currentState == CROSS_WON) {
+                    scoreX++;
+                    System.out.println("'Cross' menang ronde ini!");
+                } else if (currentState == NOUGHT_WON) {
+                    scoreO++;
+                    System.out.println("'Nought' menang ronde ini!");
+                } else if (currentState == DRAW) {
+                    System.out.println("Seri di ronde ini.");
+                }
+
+                // Ganti pemain hanya jika permainan masih berjalan
+                if (currentState == PLAYING) {
+                    currentPlayer = (currentPlayer == CROSS) ? NOUGHT : CROSS;
+                }
+            } while (currentState == PLAYING);
+
+            System.out.println("Skor sementara: X = " + scoreX + " | O = " + scoreO);
+        }
+
+        // Tampilkan hasil akhir
+        System.out.println("\n=== Permainan Selesai ===");
+        System.out.println("Skor akhir: X = " + scoreX + " | O = " + scoreO);
+        if (scoreX > scoreO) {
+            System.out.println("Pemenang akhir: 'X'");
+        } else if (scoreO > scoreX) {
+            System.out.println("Pemenang akhir: 'O'");
+        } else {
+            System.out.println("Hasil akhir: Seri!");
+        }
+
+        System.out.println("Terima kasih sudah bermain!");
     }
+
 
     /** Initialize the board[][], currentState and currentPlayer for a new game*/
     public static void initGame() {
@@ -63,6 +92,16 @@ public class TTTConsoleNonOO {
         }
         currentPlayer = CROSS;   // cross plays first
         currentState  = PLAYING; // ready to play
+
+        System.out.println("Papan permainan dipetakan sebagai berikut:");
+        System.out.println(" 1 1 | 1 2 | 1 3 ");
+        System.out.println("-----+-----+-----");
+        System.out.println(" 2 1 | 2 2 | 2 3 ");
+        System.out.println("-----+-----+-----");
+        System.out.println(" 3 1 | 3 2 | 3 3 ");
+        System.out.println();
+
+
     }
 
     /** The currentPlayer makes one move (one step).
