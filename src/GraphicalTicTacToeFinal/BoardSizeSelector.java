@@ -6,43 +6,64 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * Dialog untuk memilih ukuran board sebelum memulai game
- * Menyediakan opsi 3x3, 4x4, dan 5x5
+ * Enhanced dialog for selecting board size with auto-layout information
+ * Shows optimal sizing information for each board size option
  */
 public class BoardSizeSelector extends JDialog {
     private int selectedSize = 3; // Default 3x3
     private boolean confirmed = false;
 
     public BoardSizeSelector(JFrame parent) {
-        super(parent, "Select Board Size", true);
+        super(parent, "Select Board Size - Auto Layout", true);
         initComponents();
     }
 
     private void initComponents() {
         setLayout(new BorderLayout());
 
-        // Title panel dengan gradient background
+        // Title panel with gradient background
         JPanel titlePanel = new JPanel();
         titlePanel.setBackground(new Color(76, 175, 80));
         titlePanel.setBorder(BorderFactory.createEmptyBorder(15, 10, 15, 10));
 
-        JLabel titleLabel = new JLabel("🎮 Choose Your Board Size");
+        JLabel titleLabel = new JLabel("🎮 Choose Your Board Size (Auto-Layout)");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setHorizontalAlignment(JLabel.CENTER);
         titlePanel.add(titleLabel);
 
-        // Options panel dengan styling yang menarik
+        // Auto-layout info panel
+        JPanel infoPanel = new JPanel();
+        infoPanel.setBackground(new Color(240, 248, 255));
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        JLabel infoLabel = new JLabel("<html><center>" +
+                "🖥️ Screen Resolution: " + (int)screenSize.getWidth() + "x" + (int)screenSize.getHeight() + "<br>" +
+                "📐 Game will automatically calculate optimal cell size<br>" +
+                "🎯 Perfect sizing for your display</center></html>");
+        infoLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        infoLabel.setForeground(new Color(51, 102, 153));
+        infoLabel.setHorizontalAlignment(JLabel.CENTER);
+        infoPanel.add(infoLabel);
+
+        // Options panel with styling yang menarik
         JPanel optionsPanel = new JPanel(new GridLayout(3, 1, 15, 15));
         optionsPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
         optionsPanel.setBackground(Color.WHITE);
 
         ButtonGroup group = new ButtonGroup();
 
+        // Calculate estimated cell sizes for preview
+        int availableSpace = Math.min((int)screenSize.getWidth(), (int)screenSize.getHeight()) - 200;
+        int cellSize3x3 = Math.max(80, Math.min(150, availableSpace / 3));
+        int cellSize4x4 = Math.max(80, Math.min(150, availableSpace / 4));
+        int cellSize5x5 = Math.max(80, Math.min(150, availableSpace / 5));
+
         // 3x3 option
         JRadioButton option3x3 = createStyledRadioButton(
                 "🟩 3x3 (Classic)",
-                "Perfect for quick games - 3 in a row to win",
+                "Perfect for quick games - 3 in a row to win<br>Estimated cell size: " + cellSize3x3 + "px",
                 true
         );
         option3x3.addActionListener(e -> selectedSize = 3);
@@ -52,7 +73,7 @@ public class BoardSizeSelector extends JDialog {
         // 4x4 option
         JRadioButton option4x4 = createStyledRadioButton(
                 "🟨 4x4 (Medium)",
-                "More strategic gameplay - 4 in a row to win",
+                "More strategic gameplay - 4 in a row to win<br>Estimated cell size: " + cellSize4x4 + "px",
                 false
         );
         option4x4.addActionListener(e -> selectedSize = 4);
@@ -62,7 +83,7 @@ public class BoardSizeSelector extends JDialog {
         // 5x5 option
         JRadioButton option5x5 = createStyledRadioButton(
                 "🟦 5x5 (Large)",
-                "Advanced gameplay - 4 in a row to win",
+                "Advanced gameplay - 4 in a row to win<br>Estimated cell size: " + cellSize5x5 + "px",
                 false
         );
         option5x5.addActionListener(e -> selectedSize = 5);
@@ -88,7 +109,12 @@ public class BoardSizeSelector extends JDialog {
 
         // Assembly
         add(titlePanel, BorderLayout.NORTH);
-        add(optionsPanel, BorderLayout.CENTER);
+
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(infoPanel, BorderLayout.NORTH);
+        centerPanel.add(optionsPanel, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
+
         add(buttonsPanel, BorderLayout.SOUTH);
 
         // Dialog properties
@@ -116,7 +142,7 @@ public class BoardSizeSelector extends JDialog {
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
         titleLabel.setForeground(new Color(51, 51, 51));
 
-        JLabel descLabel = new JLabel(description);
+        JLabel descLabel = new JLabel("<html>" + description + "</html>");
         descLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         descLabel.setForeground(new Color(102, 102, 102));
 

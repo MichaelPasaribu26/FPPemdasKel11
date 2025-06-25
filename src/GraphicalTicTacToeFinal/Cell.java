@@ -3,14 +3,15 @@ import java.awt.*;
 
 /**
  * The Cell class models each individual cell of the game board.
- * This file remains unchanged as it already works perfectly with dynamic board sizes.
+ * Modified to support dynamic sizing based on screen dimensions.
  */
 public class Cell {
-    // Define named constants for drawing
-    public static final int SIZE = 120; // cell width/height (square)
+    // Dynamic cell size - will be calculated based on screen size
+    public static int SIZE = 120; // default size, will be updated
+
     // Symbols (cross/nought) are displayed inside a cell, with padding from border
-    public static final int PADDING = SIZE / 5;
-    public static final int SEED_SIZE = SIZE - PADDING * 2;
+    public static int PADDING = SIZE / 5;
+    public static int SEED_SIZE = SIZE - PADDING * 2;
 
     // Define properties (package-visible)
     /** Content of this cell (Seed.EMPTY, Seed.CROSS, or Seed.NOUGHT) */
@@ -28,6 +29,13 @@ public class Cell {
     /** Reset this cell's content to EMPTY, ready for new game */
     public void newGame() {
         content = Seed.NO_SEED;
+    }
+
+    /** Update cell size and recalculate dependent values */
+    public static void updateSize(int newSize) {
+        SIZE = newSize;
+        PADDING = SIZE / 5;
+        SEED_SIZE = SIZE - PADDING * 2;
     }
 
     /** Paint itself on the graphics canvas, given the Graphics context */
