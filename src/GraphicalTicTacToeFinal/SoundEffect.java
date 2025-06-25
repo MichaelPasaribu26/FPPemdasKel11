@@ -7,17 +7,11 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+
 /**
+ * Fixed SoundEffect enum - removed incorrect package reference
  * This enum encapsulates all the sound effects of a game, so as to separate the sound playing
  * codes from the game codes.
- * 1. Define all your sound effect names and the associated wave file.
- * 2. To play a specific sound, simply invoke SoundEffect.SOUND_NAME.play().
- * 3. You might optionally invoke the static method SoundEffect.initGame() to pre-load all the
- *    sound files, so that the play is not paused while loading the file for the first time.
- * 4. You can the static variable SoundEffect.volume to SoundEffect.Volume.MUTE
- *    to mute the sound.
- *
- * For Eclipse, place the audio file under "src", which will be copied into "bin".
  */
 public enum SoundEffect {
     EAT_FOOD("audio/eatfood.wav"),
@@ -29,7 +23,8 @@ public enum SoundEffect {
         MUTE, LOW, MEDIUM, HIGH
     }
 
-    public static GraphicalTicTacToeWithTurnTimer.SoundEffect.Volume volume = GraphicalTicTacToeWithTurnTimer.SoundEffect.Volume.LOW;
+    // Fixed: Removed incorrect package reference
+    public static Volume volume = Volume.LOW;
 
     /** Each sound effect has its own clip, loaded with its own sound file. */
     private Clip clip;
@@ -39,24 +34,31 @@ public enum SoundEffect {
         try {
             // Use URL (instead of File) to read from disk and JAR.
             URL url = this.getClass().getClassLoader().getResource(soundFileName);
-            // Set up an audio input stream piped from the sound file.
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(url);
-            // Get a clip resource.
-            clip = AudioSystem.getClip();
-            // Open audio clip and load samples from the audio input stream.
-            clip.open(audioInputStream);
+            if (url != null) {
+                // Set up an audio input stream piped from the sound file.
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(url);
+                // Get a clip resource.
+                clip = AudioSystem.getClip();
+                // Open audio clip and load samples from the audio input stream.
+                clip.open(audioInputStream);
+            } else {
+                System.err.println("Could not find audio file: " + soundFileName);
+            }
         } catch (UnsupportedAudioFileException e) {
+            System.err.println("Unsupported audio file: " + soundFileName);
             e.printStackTrace();
         } catch (IOException e) {
+            System.err.println("IO error loading audio file: " + soundFileName);
             e.printStackTrace();
         } catch (LineUnavailableException e) {
+            System.err.println("Audio line unavailable for: " + soundFileName);
             e.printStackTrace();
         }
     }
 
     /** Play or Re-play the sound effect from the beginning, by rewinding. */
     public void play() {
-        if (volume != GraphicalTicTacToeWithTurnTimer.SoundEffect.Volume.MUTE) {
+        if (volume != Volume.MUTE && clip != null) {
             if (clip.isRunning())
                 clip.stop();   // Stop the player if it is still running
             clip.setFramePosition(0); // rewind to the beginning

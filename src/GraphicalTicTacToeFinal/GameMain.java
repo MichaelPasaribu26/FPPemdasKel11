@@ -8,13 +8,13 @@ public class GameMain extends JPanel {
     private static final long serialVersionUID = 1L;
 
     // Constants
-    public static final String TITLE = "Tic Tac Toe - Auto Layout";
+    public static final String TITLE = "Tic Tac Toe - Enhanced Auto Layout";
     public static final Color COLOR_BG = Color.WHITE;
     public static final Color COLOR_BG_STATUS = new Color(216, 216, 216);
     public static final Color COLOR_CROSS = new Color(239, 105, 80);
     public static final Color COLOR_NOUGHT = new Color(64, 154, 225);
     public static final Color COLOR_PAUSE_OVERLAY = new Color(0, 0, 0, 150);
-    public static final Font FONT_STATUS = new Font("OCR A Extended", Font.PLAIN, 14);
+    public static final Font FONT_STATUS = new Font("Arial", Font.PLAIN, 12);
     public static final Font FONT_PAUSE = new Font("Arial", Font.BOLD, 48);
     private static final int TURN_TIME = 10;
 
@@ -87,13 +87,27 @@ public class GameMain extends JPanel {
             }
         });
 
-        // Keyboard listener for pause/resume
+        // Enhanced keyboard listener
         setFocusable(true);
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    togglePause();
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_SPACE:
+                        togglePause();
+                        break;
+                    case KeyEvent.VK_N:
+                        if (e.isControlDown()) {
+                            newGame();
+                        }
+                        break;
+                    case KeyEvent.VK_R:
+                        if (e.isControlDown()) {
+                            crossWins = 0;
+                            noughtWins = 0;
+                            repaint();
+                        }
+                        break;
                 }
             }
         });
@@ -109,7 +123,7 @@ public class GameMain extends JPanel {
             }
         });
 
-        // Status bar setup
+        // Enhanced status bar setup
         statusBar = new JLabel();
         statusBar.setFont(FONT_STATUS);
         statusBar.setBackground(COLOR_BG_STATUS);
@@ -118,12 +132,13 @@ public class GameMain extends JPanel {
         statusBar.setHorizontalAlignment(JLabel.LEFT);
         statusBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 12));
 
-        // Create pause/resume button
+        // Create enhanced pause/resume button
         pauseResumeButton = new JButton("⏸️ Pause");
-        pauseResumeButton.setFont(new Font("Arial", Font.BOLD, 12));
-        pauseResumeButton.setPreferredSize(new Dimension(80, 25));
+        pauseResumeButton.setFont(new Font("Arial", Font.BOLD, 11));
+        pauseResumeButton.setPreferredSize(new Dimension(85, 25));
         pauseResumeButton.setFocusPainted(false);
         pauseResumeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        pauseResumeButton.setToolTipText("Pause/Resume game (Space)");
         pauseResumeButton.addActionListener(e -> togglePause());
 
         // Create bottom panel
@@ -237,20 +252,23 @@ public class GameMain extends JPanel {
         gameMenu = new JMenu("Game");
         gameMenu.setFont(FONT_STATUS);
 
-        JMenuItem newGameItem = new JMenuItem("🎮 New Game");
+        JMenuItem newGameItem = new JMenuItem("🎮 New Game (Ctrl+N)");
         newGameItem.setFont(FONT_STATUS);
+        newGameItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK));
         newGameItem.addActionListener(e -> newGame());
 
         JMenuItem pauseResumeItem = new JMenuItem("⏸️ Pause/Resume (Space)");
         pauseResumeItem.setFont(FONT_STATUS);
+        pauseResumeItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
         pauseResumeItem.addActionListener(e -> togglePause());
 
         JMenuItem changeSizeItem = new JMenuItem("📐 Change Board Size");
         changeSizeItem.setFont(FONT_STATUS);
         changeSizeItem.addActionListener(e -> changeBoardSize());
 
-        JMenuItem resetScoreItem = new JMenuItem("🔄 Reset Score");
+        JMenuItem resetScoreItem = new JMenuItem("🔄 Reset Score (Ctrl+R)");
         resetScoreItem.setFont(FONT_STATUS);
+        resetScoreItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
         resetScoreItem.addActionListener(e -> {
             crossWins = 0;
             noughtWins = 0;
@@ -304,29 +322,34 @@ public class GameMain extends JPanel {
     }
 
     private void showAbout() {
-        String message = "🎮 Tic Tac Toe - Auto Layout\n\n" +
-                "Version: 3.0 with Auto-Layout System\n" +
+        double utilization = board.getScreenUtilizationRatio();
+        String message = "🎮 Tic Tac Toe - Enhanced Auto Layout\n\n" +
+                "Version: 3.1 with Advanced Auto-Layout System\n" +
                 "Features:\n" +
-                "• Automatic screen size adaptation\n" +
+                "• Intelligent screen size adaptation\n" +
                 "• Multiple board sizes (3x3, 4x4, 5x5)\n" +
                 "• Turn timer (10 seconds per turn)\n" +
                 "• Pause/Resume functionality\n" +
-                "• Score tracking\n" +
-                "• Sound effects\n" +
+                "• Score tracking with keyboard shortcuts\n" +
+                "• Sound effects with error handling\n" +
+                "• Anti-aliased graphics rendering\n" +
                 "• Responsive cell sizing\n\n" +
                 "Controls:\n" +
                 "• Space bar: Pause/Resume\n" +
+                "• Ctrl+N: New Game\n" +
+                "• Ctrl+R: Reset Score\n" +
                 "• Click cells to make moves\n\n" +
-                "Auto-Layout Info:\n" +
+                "Current Auto-Layout Info:\n" +
                 "• Cell size: " + Cell.SIZE + "px\n" +
                 "• Board size: " + Board.CANVAS_WIDTH + "x" + Board.CANVAS_HEIGHT + "px\n" +
-                "• Optimized for your screen resolution";
+                "• Screen utilization: " + String.format("%.1f", utilization) + "%\n" +
+                "• Optimized for your " + Board.ROWS + "x" + Board.COLS + " board";
 
         JOptionPane.showMessageDialog(this, message, "About", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showRules() {
-        String rules = "📖 Game Rules:\n\n" +
+        String rules = "📖 Enhanced Game Rules:\n\n" +
                 "🟩 3x3 Board: Get 3 in a row to win\n" +
                 "🟨 4x4 Board: Get 4 in a row to win\n" +
                 "🟦 5x5 Board: Get 4 in a row to win\n\n" +
@@ -334,17 +357,26 @@ public class GameMain extends JPanel {
                 "🔄 Time runs out = turn switches automatically\n" +
                 "⏸️ Press Space or click Pause button to pause\n" +
                 "🏆 Score is tracked across multiple games\n\n" +
-                "Auto-Layout Features:\n" +
-                "• Game automatically adapts to your screen size\n" +
-                "• Optimal cell size calculated for best experience\n" +
-                "• Maintains perfect proportions on any display\n" +
-                "• Minimum cell size: 80px, Maximum: 150px\n\n" +
-                "Controls:\n" +
-                "• Click on any empty cell to make your move\n" +
-                "• Press Space bar to pause/resume\n" +
-                "• Timer stops when paused";
+                "Enhanced Auto-Layout Features:\n" +
+                "• Intelligent screen size detection\n" +
+                "• Usable area calculation (excludes taskbar)\n" +
+                "• Optimal cell size for best experience\n" +
+                "• Perfect proportions on any display\n" +
+                "• Adaptive sizing: 60px - 180px range\n" +
+                "• Special optimization for 3x3 boards\n" +
+                "• Real-time screen utilization feedback\n\n" +
+                "Keyboard Shortcuts:\n" +
+                "• Space: Pause/Resume game\n" +
+                "• Ctrl+N: Start new game\n" +
+                "• Ctrl+R: Reset score counter\n" +
+                "• Click: Make moves on board\n\n" +
+                "Technical Features:\n" +
+                "• Anti-aliased graphics rendering\n" +
+                "• Fallback text display if images fail\n" +
+                "• Enhanced error handling\n" +
+                "• Responsive UI components";
 
-        JOptionPane.showMessageDialog(this, rules, "Game Rules", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, rules, "Enhanced Game Rules", JOptionPane.INFORMATION_MESSAGE);
     }
 
     public JMenuBar getGameMenuBar() {
@@ -355,6 +387,13 @@ public class GameMain extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         setBackground(COLOR_BG);
+
+        // Enable anti-aliasing
+        if (g instanceof Graphics2D) {
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        }
 
         board.paint(g);
 
@@ -384,7 +423,11 @@ public class GameMain extends JPanel {
             g.drawString(instructionText, x, y);
         }
 
-        // Update status bar
+        // Update status bar with enhanced information
+        updateStatusBar();
+    }
+
+    private void updateStatusBar() {
         String statusText;
         if (isPaused) {
             statusBar.setForeground(new Color(255, 152, 0));
@@ -406,9 +449,8 @@ public class GameMain extends JPanel {
 
         if (!isPaused) {
             statusText += " | Score: X " + crossWins + " - " + noughtWins + " O";
-            statusText += " | Board: " + Board.ROWS + "x" + Board.COLS +
-                    " (need " + Board.WIN_CONDITION + " in a row)";
-            statusText += " | Cell Size: " + Cell.SIZE + "px (Auto-Layout)";
+            statusText += " | " + Board.ROWS + "x" + Board.COLS + " (" + Board.WIN_CONDITION + " to win)";
+            statusText += " | " + Cell.SIZE + "px cells";
         }
 
         statusBar.setText(statusText);
@@ -419,7 +461,7 @@ public class GameMain extends JPanel {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
-            // Use default look and feel
+            System.err.println("Could not set system look and feel: " + e.getMessage());
         }
 
         SwingUtilities.invokeLater(() -> {
@@ -447,17 +489,25 @@ public class GameMain extends JPanel {
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 frame.pack();
                 frame.setLocationRelativeTo(null);
-                frame.setResizable(true); // Allow resizing for better auto-layout
+                frame.setResizable(true);
                 frame.setVisible(true);
+
+                // Set minimum size to prevent too small windows
+                frame.setMinimumSize(new Dimension(300, 350));
 
                 gameMain.newGame();
 
-                // Print auto-layout info
-                System.out.println("Auto-Layout initialized:");
-                System.out.println("- Screen resolution detected and optimal cell size calculated");
-                System.out.println("- Cell size: " + Cell.SIZE + "px");
-                System.out.println("- Board dimensions: " + Board.CANVAS_WIDTH + "x" + Board.CANVAS_HEIGHT + "px");
-                System.out.println("- Window can be resized for different viewing preferences");
+                // Print enhanced auto-layout info
+                System.out.println("\n=== Enhanced Auto-Layout System Initialized ===");
+                System.out.println("✓ Screen resolution detected and analyzed");
+                System.out.println("✓ Usable screen area calculated");
+                System.out.println("✓ Optimal cell size determined: " + Cell.SIZE + "px");
+                System.out.println("✓ Board dimensions: " + Board.CANVAS_WIDTH + "x" + Board.CANVAS_HEIGHT + "px");
+                System.out.println("✓ Screen utilization: " + String.format("%.1f", gameMain.board.getScreenUtilizationRatio()) + "%");
+                System.out.println("✓ Window is resizable for user preference");
+                System.out.println("✓ Anti-aliasing enabled for smooth graphics");
+                System.out.println("✓ Enhanced keyboard shortcuts available");
+                System.out.println("=== Ready to Play! ===\n");
             } else {
                 System.exit(0);
             }

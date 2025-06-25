@@ -22,10 +22,10 @@ public class Board {
     public static final Color COLOR_GRID = Color.LIGHT_GRAY;
     public static final int Y_OFFSET = 1;
 
-    // Auto-layout constants
-    private static final int MIN_CELL_SIZE = 80;
-    private static final int MAX_CELL_SIZE = 150;
-    private static final int UI_PADDING = 200; // Space for UI elements
+    // Enhanced auto-layout constants
+    private static final int MIN_CELL_SIZE = 60;  // Reduced for smaller screens
+    private static final int MAX_CELL_SIZE = 180; // Increased for larger screens
+    private static final int UI_PADDING = 150;    // Reduced padding for better space utilization
 
     // Define properties (package-visible)
     /** Composes of 2D array of ROWS-by-COLS Cell instances */
@@ -37,27 +37,46 @@ public class Board {
         initGame();
     }
 
-    /** Calculate optimal cell size based on screen dimensions */
+    /** Enhanced calculation for optimal cell size based on screen dimensions */
     private void calculateOptimalCellSize() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int screenWidth = (int) screenSize.getWidth();
         int screenHeight = (int) screenSize.getHeight();
 
-        // Calculate available space (smaller dimension minus UI padding)
-        int availableSpace = Math.min(screenWidth, screenHeight) - UI_PADDING;
+        // Get usable screen area (excluding taskbar, etc.)
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        Rectangle bounds = ge.getMaximumWindowBounds();
+        int usableWidth = bounds.width;
+        int usableHeight = bounds.height;
 
-        // Calculate cell size based on board dimensions
-        int calculatedSize = availableSpace / Math.max(ROWS, COLS);
+        // Use the smaller of actual screen or usable area
+        int effectiveWidth = Math.min(screenWidth, usableWidth);
+        int effectiveHeight = Math.min(screenHeight, usableHeight);
+
+        // Calculate available space (smaller dimension minus UI padding)
+        int availableSpace = Math.min(effectiveWidth, effectiveHeight) - UI_PADDING;
+
+        // Calculate cell size based on board dimensions with some margin
+        int calculatedSize = (availableSpace * 85 / 100) / Math.max(ROWS, COLS); // Use 85% of available space
 
         // Ensure cell size is within reasonable bounds
         int optimalSize = Math.max(MIN_CELL_SIZE, Math.min(MAX_CELL_SIZE, calculatedSize));
+
+        // For 3x3 boards, prefer slightly larger cells if possible
+        if (ROWS == 3 && COLS == 3 && optimalSize < 100 && availableSpace > 350) {
+            optimalSize = Math.min(120, (availableSpace * 90 / 100) / 3);
+        }
 
         // Update cell size
         Cell.updateSize(optimalSize);
         updateCanvasDimensions();
 
-        System.out.println("Screen: " + screenWidth + "x" + screenHeight +
-                ", Calculated cell size: " + optimalSize);
+        System.out.println("Auto-Layout Calculation:");
+        System.out.println("- Screen: " + screenWidth + "x" + screenHeight);
+        System.out.println("- Usable area: " + effectiveWidth + "x" + effectiveHeight);
+        System.out.println("- Available space: " + availableSpace + "px");
+        System.out.println("- Calculated cell size: " + optimalSize + "px");
+        System.out.println("- Board dimensions: " + CANVAS_WIDTH + "x" + CANVAS_HEIGHT + "px");
     }
 
     /** Update canvas dimensions based on current cell size */
@@ -82,12 +101,19 @@ public class Board {
         COLS = cols;
 
         // Set win condition based on board size
-        if (rows == 3) {
-            WIN_CONDITION = 3;
-        } else if (rows == 4) {
-            WIN_CONDITION = 4;
-        } else if (rows == 5) {
-            WIN_CONDITION = 4; // 4 in a row for 5x5 for better balance
+        switch (rows) {
+            case 3:
+                WIN_CONDITION = 3;
+                break;
+            case 4:
+                WIN_CONDITION = 4;
+                break;
+            case 5:
+                WIN_CONDITION = 4; // 4 in a row for 5x5 for better balance
+                break;
+            default:
+                WIN_CONDITION = Math.min(rows, 4); // Max 4 in a row for larger boards
+                break;
         }
 
         // Recalculate optimal cell size for new board dimensions
@@ -97,7 +123,21 @@ public class Board {
 
     /** Get optimal window size for current board configuration */
     public Dimension getOptimalWindowSize() {
-        return new Dimension(CANVAS_WIDTH + 20, CANVAS_HEIGHT + 100); // Extra space for UI
+        // Add extra space for menu bar, status bar, and window decorations
+        return new Dimension(CANVAS_WIDTH + 40, CANVAS_HEIGHT + 120);
+    }
+
+    /** Get current cell size for external reference */
+    public int getCurrentCellSize() {
+        return Cell.SIZE;
+    }
+
+    /** Get board efficiency ratio (how much of screen is used) */
+    public double getScreenUtilizationRatio() {
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        double screenArea = screenSize.getWidth() * screenSize.getHeight();
+        double boardArea = CANVAS_WIDTH * CANVAS_HEIGHT;
+        return (boardArea / screenArea) * 100;
     }
 
     /** Reset the game board, ready for new game */
@@ -182,6 +222,12 @@ public class Board {
 
     /** Paint itself on the graphics canvas, given the Graphics context */
     public void paint(Graphics g) {
+        // Enable anti-aliasing for smoother graphics
+        if (g instanceof Graphics2D) {
+            Graphics2D g2d = (Graphics2D) g;
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        }
+
         // Draw the grid-lines with dynamic sizing
         g.setColor(COLOR_GRID);
         for (int row = 1; row < ROWS; ++row) {
