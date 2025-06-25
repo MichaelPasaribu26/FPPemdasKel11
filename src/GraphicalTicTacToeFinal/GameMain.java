@@ -24,6 +24,10 @@ public class GameMain extends JPanel {
     private Seed currentPlayer;
     private JLabel statusBar;
 
+    // Player names
+    private String playerXName = "Player X";
+    private String playerOName = "Player O";
+
     // Pause/Resume functionality
     private boolean isPaused = false;
     private JButton pauseResumeButton;
@@ -108,6 +112,11 @@ public class GameMain extends JPanel {
                             repaint();
                         }
                         break;
+                    case KeyEvent.VK_P:
+                        if (e.isControlDown()) {
+                            changePlayerNames();
+                        }
+                        break;
                 }
             }
         });
@@ -154,6 +163,28 @@ public class GameMain extends JPanel {
         newGame();
         createMenuBar();
         updatePanelSize();
+    }
+
+    /** Set player names */
+    public void setPlayerNames(String playerXName, String playerOName) {
+        this.playerXName = playerXName;
+        this.playerOName = playerOName;
+        repaint(); // Update display
+    }
+
+    /** Get current player name */
+    public String getCurrentPlayerName() {
+        return (currentPlayer == Seed.CROSS) ? playerXName : playerOName;
+    }
+
+    /** Get winner name */
+    public String getWinnerName() {
+        if (currentState == State.CROSS_WON) {
+            return playerXName;
+        } else if (currentState == State.NOUGHT_WON) {
+            return playerOName;
+        }
+        return "";
     }
 
     /** Update panel size based on current board dimensions */
@@ -266,6 +297,11 @@ public class GameMain extends JPanel {
         changeSizeItem.setFont(FONT_STATUS);
         changeSizeItem.addActionListener(e -> changeBoardSize());
 
+        JMenuItem changeNamesItem = new JMenuItem("👥 Change Player Names (Ctrl+P)");
+        changeNamesItem.setFont(FONT_STATUS);
+        changeNamesItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK));
+        changeNamesItem.addActionListener(e -> changePlayerNames());
+
         JMenuItem resetScoreItem = new JMenuItem("🔄 Reset Score (Ctrl+R)");
         resetScoreItem.setFont(FONT_STATUS);
         resetScoreItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
@@ -284,6 +320,7 @@ public class GameMain extends JPanel {
         gameMenu.add(pauseResumeItem);
         gameMenu.addSeparator();
         gameMenu.add(changeSizeItem);
+        gameMenu.add(changeNamesItem);
         gameMenu.add(resetScoreItem);
         gameMenu.addSeparator();
         gameMenu.add(exitItem);
@@ -321,22 +358,43 @@ public class GameMain extends JPanel {
         }
     }
 
+    private void changePlayerNames() {
+        PlayerNameDialog nameDialog = new PlayerNameDialog(parentFrame);
+        nameDialog.setVisible(true);
+
+        if (nameDialog.isConfirmed()) {
+            setPlayerNames(nameDialog.getPlayerXName(), nameDialog.getPlayerOName());
+
+            // Show confirmation
+            JOptionPane.showMessageDialog(this,
+                    "Player names updated!\n" +
+                            "❌ " + playerXName + " vs ⭕ " + playerOName,
+                    "Names Updated",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
     private void showAbout() {
         double utilization = board.getScreenUtilizationRatio();
         String message = "🎮 Tic Tac Toe - Enhanced Auto Layout\n\n" +
-                "Version: 3.1 with Advanced Auto-Layout System\n" +
+                "Version: 3.2 with Player Names Feature\n" +
                 "Features:\n" +
                 "• Intelligent screen size adaptation\n" +
                 "• Multiple board sizes (3x3, 4x4, 5x5)\n" +
+                "• Custom player names with random generator\n" +
                 "• Turn timer (10 seconds per turn)\n" +
                 "• Pause/Resume functionality\n" +
-                "• Score tracking with keyboard shortcuts\n" +
+                "• Score tracking with player names\n" +
                 "• Sound effects with error handling\n" +
                 "• Anti-aliased graphics rendering\n" +
                 "• Responsive cell sizing\n\n" +
+                "Current Players:\n" +
+                "❌ " + playerXName + " (X)\n" +
+                "⭕ " + playerOName + " (O)\n\n" +
                 "Controls:\n" +
                 "• Space bar: Pause/Resume\n" +
                 "• Ctrl+N: New Game\n" +
+                "• Ctrl+P: Change Player Names\n" +
                 "• Ctrl+R: Reset Score\n" +
                 "• Click cells to make moves\n\n" +
                 "Current Auto-Layout Info:\n" +
@@ -353,10 +411,15 @@ public class GameMain extends JPanel {
                 "🟩 3x3 Board: Get 3 in a row to win\n" +
                 "🟨 4x4 Board: Get 4 in a row to win\n" +
                 "🟦 5x5 Board: Get 4 in a row to win\n\n" +
+                "👥 Player Names Feature:\n" +
+                "• Set custom names for both players\n" +
+                "• Names appear in status bar and win messages\n" +
+                "• Random name generator available\n" +
+                "• Names are saved during game session\n\n" +
                 "⏱️ Each player has 10 seconds per turn\n" +
                 "🔄 Time runs out = turn switches automatically\n" +
                 "⏸️ Press Space or click Pause button to pause\n" +
-                "🏆 Score is tracked across multiple games\n\n" +
+                "🏆 Score is tracked with player names\n\n" +
                 "Enhanced Auto-Layout Features:\n" +
                 "• Intelligent screen size detection\n" +
                 "• Usable area calculation (excludes taskbar)\n" +
@@ -368,13 +431,15 @@ public class GameMain extends JPanel {
                 "Keyboard Shortcuts:\n" +
                 "• Space: Pause/Resume game\n" +
                 "• Ctrl+N: Start new game\n" +
+                "• Ctrl+P: Change player names\n" +
                 "• Ctrl+R: Reset score counter\n" +
                 "• Click: Make moves on board\n\n" +
                 "Technical Features:\n" +
                 "• Anti-aliased graphics rendering\n" +
                 "• Fallback text display if images fail\n" +
                 "• Enhanced error handling\n" +
-                "• Responsive UI components";
+                "• Responsive UI components\n" +
+                "• Personalized gaming experience";
 
         JOptionPane.showMessageDialog(this, rules, "Enhanced Game Rules", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -434,23 +499,26 @@ public class GameMain extends JPanel {
             statusText = "GAME PAUSED - Press Space to Resume";
         } else if (currentState == State.PLAYING) {
             statusBar.setForeground(Color.BLACK);
-            statusText = (currentPlayer == Seed.CROSS) ? "X's Turn" : "O's Turn";
+            String currentPlayerName = getCurrentPlayerName();
+            String symbol = (currentPlayer == Seed.CROSS) ? "❌" : "⭕";
+            statusText = symbol + " " + currentPlayerName + "'s Turn";
             statusText += " | Time: " + timeLeft + "s";
         } else if (currentState == State.DRAW) {
             statusBar.setForeground(Color.RED);
-            statusText = "It's a Draw! Click to play again.";
+            statusText = "🤝 It's a Draw! " + playerXName + " vs " + playerOName + " - Click to play again";
         } else if (currentState == State.CROSS_WON) {
             statusBar.setForeground(COLOR_CROSS);
-            statusText = "'X' Won! Click to play again.";
+            statusText = "🏆 " + playerXName + " (❌) Won! Click to play again";
         } else {
             statusBar.setForeground(COLOR_NOUGHT);
-            statusText = "'O' Won! Click to play again.";
+            statusText = "🏆 " + playerOName + " (⭕) Won! Click to play again";
         }
 
-        if (!isPaused) {
-            statusText += " | Score: X " + crossWins + " - " + noughtWins + " O";
+        if (!isPaused && currentState == State.PLAYING) {
+            statusText += " | Score: " + playerXName + " " + crossWins + " - " + noughtWins + " " + playerOName;
             statusText += " | " + Board.ROWS + "x" + Board.COLS + " (" + Board.WIN_CONDITION + " to win)";
-            statusText += " | " + Cell.SIZE + "px cells";
+        } else if (!isPaused && (currentState == State.CROSS_WON || currentState == State.NOUGHT_WON || currentState == State.DRAW)) {
+            statusText += " | Score: " + playerXName + " " + crossWins + " - " + noughtWins + " " + playerOName;
         }
 
         statusBar.setText(statusText);
@@ -465,49 +533,65 @@ public class GameMain extends JPanel {
         }
 
         SwingUtilities.invokeLater(() -> {
-            // Show board size selector first
-            BoardSizeSelector selector = new BoardSizeSelector(null);
-            selector.setVisible(true);
+            // Show player name dialog first
+            PlayerNameDialog nameDialog = new PlayerNameDialog(null);
+            nameDialog.setVisible(true);
 
-            if (selector.isConfirmed()) {
-                int size = selector.getSelectedSize();
+            if (nameDialog.isConfirmed()) {
+                String playerXName = nameDialog.getPlayerXName();
+                String playerOName = nameDialog.getPlayerOName();
 
-                JFrame frame = new JFrame(TITLE);
-                GameMain gameMain = new GameMain();
+                // Show board size selector
+                BoardSizeSelector selector = new BoardSizeSelector(null);
+                selector.setVisible(true);
 
-                // Set parent frame reference for auto-layout
-                gameMain.setParentFrame(frame);
+                if (selector.isConfirmed()) {
+                    int size = selector.getSelectedSize();
 
-                // Set board size before displaying
-                gameMain.board.setBoardSize(size, size);
-                gameMain.updatePanelSize();
+                    JFrame frame = new JFrame(TITLE + " - " + playerXName + " vs " + playerOName);
+                    GameMain gameMain = new GameMain();
 
-                // Set menu bar
-                frame.setJMenuBar(gameMain.getGameMenuBar());
+                    // Set player names
+                    gameMain.setPlayerNames(playerXName, playerOName);
 
-                frame.setContentPane(gameMain);
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.pack();
-                frame.setLocationRelativeTo(null);
-                frame.setResizable(true);
-                frame.setVisible(true);
+                    // Set parent frame reference for auto-layout
+                    gameMain.setParentFrame(frame);
 
-                // Set minimum size to prevent too small windows
-                frame.setMinimumSize(new Dimension(300, 350));
+                    // Set board size before displaying
+                    gameMain.board.setBoardSize(size, size);
+                    gameMain.updatePanelSize();
 
-                gameMain.newGame();
+                    // Set menu bar
+                    frame.setJMenuBar(gameMain.getGameMenuBar());
 
-                // Print enhanced auto-layout info
-                System.out.println("\n=== Enhanced Auto-Layout System Initialized ===");
-                System.out.println("✓ Screen resolution detected and analyzed");
-                System.out.println("✓ Usable screen area calculated");
-                System.out.println("✓ Optimal cell size determined: " + Cell.SIZE + "px");
-                System.out.println("✓ Board dimensions: " + Board.CANVAS_WIDTH + "x" + Board.CANVAS_HEIGHT + "px");
-                System.out.println("✓ Screen utilization: " + String.format("%.1f", gameMain.board.getScreenUtilizationRatio()) + "%");
-                System.out.println("✓ Window is resizable for user preference");
-                System.out.println("✓ Anti-aliasing enabled for smooth graphics");
-                System.out.println("✓ Enhanced keyboard shortcuts available");
-                System.out.println("=== Ready to Play! ===\n");
+                    frame.setContentPane(gameMain);
+                    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    frame.pack();
+                    frame.setLocationRelativeTo(null);
+                    frame.setResizable(true);
+                    frame.setVisible(true);
+
+                    // Set minimum size to prevent too small windows
+                    frame.setMinimumSize(new Dimension(300, 350));
+
+                    gameMain.newGame();
+
+                    // Print enhanced auto-layout info
+                    System.out.println("\n=== Enhanced Auto-Layout System with Player Names ===");
+                    System.out.println("👥 Players: " + playerXName + " (❌) vs " + playerOName + " (⭕)");
+                    System.out.println("✓ Screen resolution detected and analyzed");
+                    System.out.println("✓ Usable screen area calculated");
+                    System.out.println("✓ Optimal cell size determined: " + Cell.SIZE + "px");
+                    System.out.println("✓ Board dimensions: " + Board.CANVAS_WIDTH + "x" + Board.CANVAS_HEIGHT + "px");
+                    System.out.println("✓ Screen utilization: " + String.format("%.1f", gameMain.board.getScreenUtilizationRatio()) + "%");
+                    System.out.println("✓ Window is resizable for user preference");
+                    System.out.println("✓ Anti-aliasing enabled for smooth graphics");
+                    System.out.println("✓ Enhanced keyboard shortcuts available");
+                    System.out.println("✓ Player names feature activated");
+                    System.out.println("=== Ready to Play! ===\n");
+                } else {
+                    System.exit(0);
+                }
             } else {
                 System.exit(0);
             }
